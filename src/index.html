@@ -1,0 +1,40 @@
+<head>
+	<script>
+		if (window.location.protocol == 'http:' && !window.location.port) window.location.protocol = 'https:' //port om te testen of de heroku wordt geladen. bij heroku is de port leeg.
+	</script>
+	<meta name="theme-color" content="#317EFB" />
+	<link rel="icon" type="image/png" href="/images/logo_32.png" />
+	<link rel="apple-touch-icon" href="/images/logo_32.png" />
+	<link rel="manifest" href="/manifest.json" />
+	<meta name="Description" content="onder-ons" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>onder-ons</title>
+</head>
+<body>
+	<noscript>JS is niet ingeschakeld.</noscript>
+	<button onclick="localStorage.clear();window.location.hash='';window.location.reload();">reset storage(DEBUG)</button>
+	<button id="start">start</button>
+	<app-game></app-game>
+	<app-chat></app-chat>
+	<div id="links">
+		<a href="https://github.com/RubenNL/onder-ons/" target="_blank"><img src="/images/github_50px.webp" /></a><br />
+		<a href="/code" target="_blank">Actieve Code</a>
+	</div>
+</body>
+<style>
+	app-game {
+		float: left;
+	}
+	#links {
+		clear: both;
+		margin: 0 auto;
+		text-align: center;
+	}
+	app-chat {
+		display: block;
+	}
+</style>
+<script type="module" src="index.js"></script>
+<script>
+	if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
+</script>
