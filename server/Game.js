@@ -13,6 +13,10 @@ module.exports = class Game {
 				this.sendAll({chat: {from: 'GAME', message: player.name + ' joined the game!'}})
 				this.sendPlayerStats()
 			}
+			if (message.pos) {
+				player.pos = message.pos
+				this.sendPlayerStats()
+			}
 			if (message.chat) this.sendAll({chat: {from: player.name, message: message.chat}})
 		})
 		player.on('close', () => {
@@ -27,6 +31,7 @@ module.exports = class Game {
 			players: this.players.map(player => {
 				return {
 					name: player.name,
+					pos: player.pos,
 				}
 			}),
 		})
