@@ -35,15 +35,15 @@ export class AppGame extends LitElement {
 		this.backgroundLayer = new Layer()
 		stage.add(this.backgroundLayer)
 		var layer = new Layer()
-		var circle = new Circle({
-			x: 395,
-			y: 395,
+		this.circle = new Circle({
+			x: 397.5,
+			y: 397.5,
 			radius: 5,
-			fill: 'red',
+			fill: 'blue',
 			stroke: 'black',
 			strokeWidth: 4,
 		})
-		layer.add(circle)
+		layer.add(this.circle)
 		stage.add(layer)
 		layer.draw()
 		var container = stage.container()
@@ -82,7 +82,10 @@ export class AppGame extends LitElement {
 		)
 	}
 	onMessage(data) {
-		if (data.you) this.me = data.you
+		if (data.you) {
+			this.me = data.you
+			this.circle.fill = this.me.imposter ? 'red' : 'green'
+		}
 		if (data.players) {
 			this.playerBoxes.forEach(box => {
 				box.destroy()
