@@ -13,7 +13,17 @@ if (!name) {
 	throw new Error()
 }
 window.sessionStorage.setItem('name', name)
+document.querySelector('#start').onclick = () => {
+	const speed = parseInt(prompt('snelheid?'))
+	if (!speed || speed < 2 || speed > 10) {
+		alert('Ongeldige snelheid!')
+		return
+	}
+	ws.send({start: {speed}})
+}
+
 const ws = new WebSocket((location.protocol == 'http:' ? 'ws://' : 'wss://') + (location + '').split('/')[2] + '/?game=' + gameId)
+window.ws = ws
 ws.oldSend = ws.send
 ws.send = message => ws.oldSend(JSON.stringify(message))
 ws.addEventListener('open', () => {

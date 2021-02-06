@@ -1,13 +1,20 @@
 import {LitElement, html} from 'lit-element'
-import {Stage, Layer, Rect} from 'konva'
+import {Stage, Layer, Rect, Circle} from 'konva'
 export class AppGame extends LitElement {
 	constructor() {
 		super()
 		this.players = []
 		this.playerBoxes = []
+		this.speed = 5
 	}
 	render() {
-		return html`<div id="container"></div>`
+		return html`
+			<button @click="${() => this.sendMessage({action: 'kill'})}">kill</button>
+			<div id="container"></div>
+		`
+	}
+	sendMessage(message) {
+		this.dispatchEvent(new CustomEvent('ws-send', {detail: message}))
 	}
 	firstUpdated() {
 		let backgroundBoxes = [
@@ -29,11 +36,10 @@ export class AppGame extends LitElement {
 		})
 		stage.add(backgroundLayer)
 		var layer = new Layer()
-		var circle = new Rect({
+		var circle = new Circle({
 			x: 395,
 			y: 395,
-			width: 10,
-			height: 5,
+			radius: 5,
 			fill: 'red',
 			stroke: 'black',
 			strokeWidth: 4,
@@ -41,7 +47,6 @@ export class AppGame extends LitElement {
 		layer.add(circle)
 		stage.add(layer)
 		layer.draw()
-		var DELTA = 5
 		var container = stage.container()
 		container.tabIndex = 1
 		container.focus()
@@ -49,10 +54,10 @@ export class AppGame extends LitElement {
 			'keydown',
 			(e => {
 				const oldPos = backgroundLayer.position()
-				if (e.keyCode === 37) backgroundLayer.x(backgroundLayer.x() + DELTA)
-				else if (e.keyCode === 38) backgroundLayer.y(backgroundLayer.y() + DELTA)
-				else if (e.keyCode === 39) backgroundLayer.x(backgroundLayer.x() - DELTA)
-				else if (e.keyCode === 40) backgroundLayer.y(backgroundLayer.y() - DELTA)
+				if (e.keyCode === 37) backgroundLayer.x(backgroundLayer.x() + this.speed)
+				else if (e.keyCode === 38) backgroundLayer.y(backgroundLayer.y() + this.speed)
+				else if (e.keyCode === 39) backgroundLayer.x(backgroundLayer.x() - this.speed)
+				else if (e.keyCode === 40) backgroundLayer.y(backgroundLayer.y() - this.speed)
 				else return
 				const newPos = backgroundLayer.position()
 				const boxes = backgroundBoxes
@@ -68,7 +73,7 @@ export class AppGame extends LitElement {
 					})
 				if (boxes.length > 0) backgroundLayer.position(oldPos)
 				else {
-					this.dispatchEvent(new CustomEvent('ws-send', {detail: {pos: newPos}}))
+					this.sendMessage({pos: newPos})
 				}
 				e.preventDefault()
 				backgroundLayer.batchDraw()
@@ -81,12 +86,13 @@ export class AppGame extends LitElement {
 				box.destroy()
 			})
 			data.players.forEach(player => {
+				if (!player.pos) return
 				var circle = new Rect({
 					x: 400 - player.pos.x,
 					y: 400 - player.pos.y,
-					width: 5,
-					height: 10,
-					fill: 'red',
+					width: player.dead ? 10 : 5,
+					height: player.dead ? 5 : 10,
+					fill: player.imposter ? 'red' : 'green',
 					stroke: 'black',
 					strokeWidth: 4,
 				})
@@ -94,6 +100,9 @@ export class AppGame extends LitElement {
 				this.backgroundLayer.add(circle)
 			})
 			this.backgroundLayer.batchDraw()
+		}
+		if (data.speed) {
+			this.speed = data.speed
 		}
 	}
 }
