@@ -1,18 +1,20 @@
 module.exports = class Game {
 	constructor(player) {
 		this.players = []
+		this.map = JSON.parse(require('fs').readFileSync('map.json'))
 		this.addPlayer(player)
 	}
 	addPlayer(player) {
 		this.players.push(player)
 		player.dead = false
 		player.imposter = false
-		player.send({id: this.players.indexOf(player)})
+		player.send({id: this.players.indexOf(player), map: this.map})
 		player.on('message', message => {
 			message = JSON.parse(message)
 			if (message.name) {
 				player.name = message.name
 				this.sendAll({chat: {from: 'GAME', message: player.name + ' joined the game!'}})
+
 				this.sendPlayerStats()
 			}
 			if (message.pos) {
@@ -58,15 +60,15 @@ module.exports = class Game {
 		imposter.imposter = true
 	}
 	sendPlayerStats() {
-		this.players.forEach(player => {
-			const pos = player.pos
-			player.send({
+		this.players.forEach(sendPlayer => {
+			sendPlayer.send({
 				players: this.players.map(player => {
 					return {
 						name: player.name,
-						...(this.distance(player.pos, pos) < 400 ? {pos: player.pos, dead: player.dead} : {}),
-						...(player.imposter ? {imposter: player.imposter} : {}),
+						...(this.distance(player.pos, sendPlayer.pos) < 400 ? {pos: player.pos, dead: player.dead} : {}),
+						...(sendPlayer.imposter ? {imposter: player.imposter} : {}),
 						dead: player.dead,
+						you: player == sendPlayer,
 					}
 				}),
 			})
