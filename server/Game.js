@@ -39,7 +39,20 @@ module.exports = class Game {
 					}
 					const killPlayer = playerList[distanceList.indexOf(distance)]
 					killPlayer.dead = true
+					player.send({chat: {from: 'GAME', message: 'killed ' + killPlayer.name}})
 					this.sendPlayerStats()
+					break
+				}
+				case 'report': {
+					const playerList = this.players.filter(searchPlayer => searchPlayer != player && searchPlayer.dead)
+					const distanceList = playerList.map(searchPlayer => this.distance(searchPlayer.pos, player.pos))
+					const distance = Math.min(...distanceList)
+					if (distance > 50) {
+						player.send({chat: {from: 'GAME', message: 'cant report from this distance!'}})
+						return
+					}
+					const reportPlayer = playerList[distanceList.indexOf(distance)]
+					this.sendAll({chat: {from: player.name, message: 'reported dead: ' + reportPlayer.name}})
 					break
 				}
 			}
@@ -62,15 +75,17 @@ module.exports = class Game {
 	sendPlayerStats() {
 		this.players.forEach(sendPlayer => {
 			sendPlayer.send({
-				players: this.players.map(player => {
-					return {
-						name: player.name,
-						...(this.distance(player.pos, sendPlayer.pos) < 400 ? {pos: player.pos, dead: player.dead} : {}),
-						...(sendPlayer.imposter ? {imposter: player.imposter} : {}),
-						dead: player.dead,
-						you: player == sendPlayer,
-					}
-				}),
+				you: {imposter: sendPlayer.imposter, pos: sendPlayer.pos, dead: sendPlayer.dead},
+				players: this.players
+					.filter(player => player != sendPlayer || player.dead)
+					.map(player => {
+						return {
+							name: player.name,
+							...(this.distance(player.pos, sendPlayer.pos) < 400 ? {pos: player.pos, dead: player.dead} : {}),
+							...(sendPlayer.imposter ? {imposter: player.imposter} : {}),
+							dead: player.dead,
+						}
+					}),
 			})
 		})
 	}

@@ -1,15 +1,25 @@
 import {LitElement, html} from 'lit-element'
 import {Stage, Layer, Rect, Circle} from 'konva'
 export class AppGame extends LitElement {
+	static get properties() {
+		return {
+			killNearby: {type: String},
+			reportNearby: {type: String},
+		}
+	}
 	constructor() {
 		super()
 		this.players = []
 		this.playerBoxes = []
 		this.speed = 5
+		this.pos = {x: 0, y: 0}
+		this.killNearby = ''
+		this.reportNearby = ''
 	}
 	render() {
 		return html`
-			<button @click="${() => this.sendMessage({action: 'kill'})}">kill</button>
+			<button ?disabled=${!this.killNearby} @click="${() => this.sendMessage({action: 'kill'})}">kill</button>
+			<button ?disabled=${!this.reportNearby} @click="${() => this.sendMessage({action: 'report'})}">report</button>
 			<div id="container"></div>
 		`
 	}
@@ -48,7 +58,7 @@ export class AppGame extends LitElement {
 				else if (e.keyCode === 39) this.backgroundLayer.x(this.backgroundLayer.x() - this.speed)
 				else if (e.keyCode === 40) this.backgroundLayer.y(this.backgroundLayer.y() - this.speed)
 				else return
-				const newPos = this.backgroundLayer.position()
+				this.pos = this.backgroundLayer.position()
 				const boxes = this.backgroundBoxes
 					.map(box => {
 						return {...box, x: -box.x, y: -box.y}
@@ -57,12 +67,14 @@ export class AppGame extends LitElement {
 						box = JSON.parse(JSON.stringify(box))
 						box.x += 400
 						box.y += 400
-						if (box.x > newPos.x && box.x - box.width < newPos.x && box.y > newPos.y && box.y - box.height < newPos.y) return true
+						if (box.x > this.pos.x && box.x - box.width < this.pos.x && box.y > this.pos.y && box.y - box.height < this.pos.y) return true
 						return false
 					})
-				if (boxes.length > 0) this.backgroundLayer.position(oldPos)
-				else {
-					this.sendMessage({pos: newPos})
+				if (boxes.length > 0) {
+					this.backgroundLayer.position(oldPos)
+					this.pos = oldPos
+				} else {
+					this.sendMessage({pos: this.pos})
 				}
 				e.preventDefault()
 				this.backgroundLayer.batchDraw()
@@ -70,24 +82,31 @@ export class AppGame extends LitElement {
 		)
 	}
 	onMessage(data) {
+		if (data.you) this.me = data.you
 		if (data.players) {
 			this.playerBoxes.forEach(box => {
 				box.destroy()
 			})
-			data.players.forEach(player => {
-				if (!player.pos) return
-				var circle = new Rect({
-					x: 400 - player.pos.x,
-					y: 400 - player.pos.y,
-					width: player.dead ? 10 : 5,
-					height: player.dead ? 5 : 10,
-					fill: player.imposter ? 'red' : 'green',
-					stroke: 'black',
-					strokeWidth: 4,
-				})
-				this.playerBoxes.push(circle)
-				this.backgroundLayer.add(circle)
-			})
+			this.killNearby = ''
+			this.reportNearby = ''
+			data.players.forEach(
+				(player => {
+					if (!player.pos) return
+					var circle = new Rect({
+						x: 400 - player.pos.x,
+						y: 400 - player.pos.y,
+						width: player.dead ? 10 : 5,
+						height: player.dead ? 5 : 10,
+						fill: player.imposter ? 'red' : 'green',
+						stroke: 'black',
+						strokeWidth: 4,
+					})
+					this.playerBoxes.push(circle)
+					this.backgroundLayer.add(circle)
+					if (!this.me.dead && this.me.imposter && !player.dead && !player.imposter && this.distance(player.pos, this.pos) < 50) this.killNearby = 'true'
+					if (!this.me.dead && player.dead && this.distance(player.pos, this.pos) < 50) this.reportNearby = 'true'
+				}).bind(this)
+			)
 			this.backgroundLayer.batchDraw()
 		}
 		if (data.speed) this.speed = data.speed
@@ -97,6 +116,11 @@ export class AppGame extends LitElement {
 				this.backgroundLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
 			})
 		}
+	}
+	distance(first, second) {
+		if (!first) return Number.MAX_SAFE_INTEGER
+		if (!second) return Number.MAX_SAFE_INTEGER
+		return Math.sqrt(Math.abs(first.x - second.x) ** 2 + Math.abs(first.y - second.y) ** 2)
 	}
 }
 customElements.define('app-game', AppGame)
