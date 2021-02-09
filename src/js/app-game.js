@@ -30,10 +30,10 @@ export class AppGame extends LitElement {
 	use() {
 		this.currentTask = getTask(this.useNearbyBox.action, this.stage, this.taskClosed)
 	}
-/*	taskClosed(finished) {
+	/*	taskClosed(finished) {
 		console.log(finished)
 	}
-*/	sendMessage(message) {
+*/ sendMessage(message) {
 		this.dispatchEvent(new CustomEvent('ws-send', {detail: message}))
 	}
 	firstUpdated() {
