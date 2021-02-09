@@ -1,10 +1,12 @@
 import {LitElement, html} from 'lit-element'
 import {Stage, Layer, Rect, Circle} from 'konva'
+import getTask from './tasks/tasks.js'
 export class AppGame extends LitElement {
 	static get properties() {
 		return {
 			killNearby: {type: String},
 			reportNearby: {type: String},
+			useNearby: {type: String},
 		}
 	}
 	constructor() {
@@ -15,25 +17,30 @@ export class AppGame extends LitElement {
 		this.pos = {x: 0, y: 0}
 		this.killNearby = ''
 		this.reportNearby = ''
+		this.useNearby = ''
 	}
 	render() {
 		return html`
 			<button ?disabled=${!this.killNearby} @click="${() => this.sendMessage({action: 'kill'})}">kill</button>
 			<button ?disabled=${!this.reportNearby} @click="${() => this.sendMessage({action: 'report'})}">report</button>
+			<button ?disabled=${!this.useNearby} @click="${this.use}">use</button>
 			<div id="container"></div>
 		`
+	}
+	use() {
+		this.currentTask = getTask(this.useNearbyBox.action, this.stage)
 	}
 	sendMessage(message) {
 		this.dispatchEvent(new CustomEvent('ws-send', {detail: message}))
 	}
 	firstUpdated() {
-		var stage = new Stage({
+		this.stage = new Stage({
 			container: this.shadowRoot.querySelector('#container'),
 			width: 800,
 			height: 800,
 		})
 		this.backgroundLayer = new Layer()
-		stage.add(this.backgroundLayer)
+		this.stage.add(this.backgroundLayer)
 		var layer = new Layer()
 		this.circle = new Circle({
 			x: 397.5,
@@ -44,9 +51,9 @@ export class AppGame extends LitElement {
 			strokeWidth: 4,
 		})
 		layer.add(this.circle)
-		stage.add(layer)
+		this.stage.add(layer)
 		layer.draw()
-		var container = stage.container()
+		var container = this.stage.container()
 		container.tabIndex = 1
 		container.focus()
 		container.addEventListener(
@@ -75,6 +82,14 @@ export class AppGame extends LitElement {
 					this.pos = oldPos
 				} else {
 					this.sendMessage({pos: this.pos})
+					this.useNearbyBox = this.useLocations
+						.map(box => {
+							return {...box, x: -box.x + 400, y: -box.y + 400}
+						})
+						.filter(location => {
+							return this.distance({x: location.x, y: location.y}, this.pos) < 50
+						})[0]
+					this.useNearby = this.useNearbyBox ? 'true' : ''
 				}
 				e.preventDefault()
 				this.backgroundLayer.batchDraw()
@@ -114,9 +129,13 @@ export class AppGame extends LitElement {
 		}
 		if (data.speed) this.speed = data.speed
 		if (data.map) {
-			this.backgroundBoxes = data.map
+			this.backgroundBoxes = data.map.walls
 			this.backgroundBoxes.forEach(box => {
 				this.backgroundLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
+			})
+			this.useLocations = data.map.useLocations
+			this.useLocations.forEach(box => {
+				this.backgroundLayer.add(new Rect({x: box.x - 5, y: box.y - 5, fill: 'purple', stroke: 'green', height: 10, width: 10}))
 			})
 		}
 	}
