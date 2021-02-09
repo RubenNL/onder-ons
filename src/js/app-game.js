@@ -113,6 +113,7 @@ export class AppGame extends LitElement {
 			this.backgroundBoxes.forEach(box => {
 				this.backgroundLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
 			})
+			this.backgroundLayer.scale({x: 0.5, y: 0.5})
 		}
 	}
 	distance(first, second) {
