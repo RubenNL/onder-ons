@@ -1,4 +1,4 @@
-import {LitElement, html} from 'lit-element'
+import {LitElement, html, css} from 'lit-element'
 import {Stage, Layer, Rect, Circle} from 'konva'
 import getTask from './tasks/tasks.js'
 export class AppGame extends LitElement {
@@ -7,6 +7,7 @@ export class AppGame extends LitElement {
 			killNearby: {type: String},
 			reportNearby: {type: String},
 			useNearby: {type: String},
+			preview: {type: String},
 		}
 	}
 	constructor() {
@@ -19,6 +20,7 @@ export class AppGame extends LitElement {
 		this.reportNearby = ''
 		this.useNearby = ''
 		this.scale = 0.5
+		this.mapScale = 0.05
 	}
 	render() {
 		return html`
@@ -26,6 +28,17 @@ export class AppGame extends LitElement {
 			<button ?disabled=${!this.reportNearby} @click="${() => this.sendMessage({action: 'report'})}">report</button>
 			<button ?disabled=${!this.useNearby} @click="${this.use}">use</button>
 			<div id="container"></div>
+			<div id="map"></div>
+		`
+	}
+	static get styles() {
+		return css`
+			#map {
+				position: absolute;
+				right: 0px;
+				top: 100px;
+				height: 100px;
+			}
 		`
 	}
 	use() {
@@ -43,6 +56,22 @@ export class AppGame extends LitElement {
 			width: 800,
 			height: 800,
 		})
+		this.mapStage = new Stage({
+			container: this.shadowRoot.querySelector('#map'),
+			width: 9491 * this.mapScale,
+			height: 6274 * this.mapScale,
+		})
+		this.mapLayer = new Layer()
+		this.mapPlayer = new Circle({
+			x: 397.5,
+			y: 397.5,
+			radius: 100,
+			fill: 'blue',
+			stroke: 'black',
+			strokeWidth: 4,
+		})
+		this.mapLayer.add(this.mapPlayer)
+		this.mapStage.add(this.mapLayer)
 		this.backgroundLayer = new Layer()
 		this.stage.add(this.backgroundLayer)
 		var layer = new Layer()
@@ -88,6 +117,12 @@ export class AppGame extends LitElement {
 							return this.distance({x: location.x, y: location.y}, this.pos) < 50
 						})[0]
 					this.useNearby = this.useNearbyBox ? 'true' : ''
+					const pos = {
+						x: (-this.pos.x + 400) / this.scale,
+						y: (-this.pos.y + 400) / this.scale,
+					}
+					this.mapPlayer.position(pos)
+					this.mapLayer.batchDraw()
 				}
 				e.preventDefault()
 			}).bind(this)
@@ -133,8 +168,12 @@ export class AppGame extends LitElement {
 			this.backgroundBoxes = data.map.walls
 			this.backgroundBoxes.forEach(box => {
 				this.backgroundLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
+				this.mapLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
 			})
-			this.backgroundLayer.scale({x: 0.5, y: 0.5})
+			this.mapLayer.scale({x: this.mapScale, t: this.mapScale})
+			this.backgroundLayer.scale({x: this.scale, y: this.scale})
+			this.mapLayer.scale({x: this.mapScale, y: this.mapScale})
+			this.mapLayer.batchDraw()
 			this.useLocations = data.map.useLocations
 			this.useLocations.forEach(box => {
 				this.backgroundLayer.add(new Rect({x: box.x - 5, y: box.y - 5, fill: 'purple', stroke: 'green', height: 10, width: 10}))
