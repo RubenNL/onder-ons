@@ -1,7 +1,9 @@
 import {Layer, Rect, Text} from 'konva'
 export default class TaskSwipe {
-	constructor(stage) {
+	constructor(stage, cb) {
 		this.stage = stage
+		this.cb = cb
+		this.finished = false
 		this.layer1 = new Layer()
 		this.stage.add(this.layer1)
 		this.card = new Rect({
@@ -50,9 +52,11 @@ export default class TaskSwipe {
 		this.layer1.batchDraw()
 	}
 	finish() {
+		this.finished = true
 		this.destroy()
 	}
 	destroy() {
 		this.layer1.destroy()
+		this.cb(this.finished)
 	}
 }
