@@ -59,27 +59,22 @@ export class AppGame extends LitElement {
 				else if (e.keyCode === 40) this.backgroundLayer.y(this.backgroundLayer.y() - this.speed)
 				else return
 				this.pos = this.backgroundLayer.position()
-				const boxes = this.backgroundBoxes
-					.map(box => {
-						return {...box, x: -box.x, y: -box.y}
-					})
-					.filter(box => {
-						box = JSON.parse(JSON.stringify(box))
-						box.x += 400
-						box.y += 400
-						if (box.x > this.pos.x && box.x - box.width < this.pos.x && box.y > this.pos.y && box.y - box.height < this.pos.y) return true
-						return false
-					})
-				if (boxes.length > 0) {
+				this.backgroundLayer.draw()
+
+				const p = this.backgroundLayer.getContext('2d').getImageData(400, 400, 1, 1).data
+				const hexColor = '#' + ('000000' + this.rgbToHex(p[0], p[1], p[2])).slice(-6)
+				if (hexColor != '#000000') {
 					this.backgroundLayer.position(oldPos)
+					this.backgroundLayer.draw()
 					this.pos = oldPos
-				} else {
-					this.sendMessage({pos: this.pos})
-				}
+				} else this.sendMessage({pos: this.pos})
 				e.preventDefault()
-				this.backgroundLayer.batchDraw()
 			}).bind(this)
 		)
+	}
+	rgbToHex(r, g, b) {
+		if (r > 255 || g > 255 || b > 255) throw 'Invalid color component'
+		return ((r << 16) | (g << 8) | b).toString(16)
 	}
 	onMessage(data) {
 		if (data.you) {
