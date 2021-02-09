@@ -134,11 +134,13 @@ export class AppGame extends LitElement {
 			this.backgroundBoxes.forEach(box => {
 				this.backgroundLayer.add(new Rect({...box, fill: 'red', stroke: 'blue'}))
 			})
+			this.backgroundLayer.scale({x: 0.5, y: 0.5})
 			this.useLocations = data.map.useLocations
 			this.useLocations.forEach(box => {
 				this.backgroundLayer.add(new Rect({x: box.x - 5, y: box.y - 5, fill: 'purple', stroke: 'green', height: 10, width: 10}))
 			})
 			this.backgroundLayer.scale({x: this.scale, y: this.scale})
+			this.backgroundLayer.position({x: -data.map.spawn.x * this.scale + 400, y: -data.map.spawn.y * this.scale + 400})
 		}
 	}
 	distance(first, second) {
