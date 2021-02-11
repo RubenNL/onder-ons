@@ -15,13 +15,14 @@ export class AppGame extends LitElement {
 		super()
 		this.players = []
 		this.playerBoxes = []
-		this.speed = 5
+		this.speed = 10
 		this.pos = {x: 0, y: 0}
 		this.killNearby = ''
 		this.reportNearby = ''
 		this.useNearby = ''
 		this.scale = 0.5
 		this.mapScale = 0.05
+		this.moving = false
 	}
 	render() {
 		return html`
@@ -57,8 +58,12 @@ export class AppGame extends LitElement {
 			width: 800,
 			height: 800,
 		})
+		this.playerLayer = new Layer()
+		this.playerLayer.scale({x: this.scale, y: this.scale})
 		this.backgroundLayer = new Layer()
 		this.stage.add(this.backgroundLayer)
+		this.stage.add(this.playerLayer)
+		this.playerLayer.draw()
 		var layer = new Layer()
 		this.circle = new Circle({
 			x: 397.5,
@@ -83,14 +88,13 @@ export class AppGame extends LitElement {
 				else if (e.keyCode === 39) this.backgroundLayer.x(this.backgroundLayer.x() - this.speed)
 				else if (e.keyCode === 40) this.backgroundLayer.y(this.backgroundLayer.y() - this.speed)
 				else return
-				this.pos = this.backgroundLayer.position()
 				this.backgroundLayer.draw()
+				this.pos = this.backgroundLayer.position()
 
 				const p = this.backgroundLayer.getContext('2d').getImageData(400, 400, 1, 1).data
 				const hexColor = '#' + ('000000' + this.rgbToHex(p[0], p[1], p[2])).slice(-6)
 				if (hexColor != '#000000') {
 					this.backgroundLayer.position(oldPos)
-					this.backgroundLayer.draw()
 					this.pos = oldPos
 				} else {
 					this.sendMessage({pos: this.pos})
@@ -102,7 +106,10 @@ export class AppGame extends LitElement {
 							return this.distance({x: location.x, y: location.y}, this.pos) < 50
 						})[0]
 					this.useNearby = this.useNearbyBox ? 'true' : ''
+					this.playerLayer.position(this.pos)
+					this.playerLayer.draw()
 				}
+				this.backgroundLayer.draw()
 				e.preventDefault()
 			}).bind(this)
 		)
@@ -126,28 +133,31 @@ export class AppGame extends LitElement {
 				(player => {
 					if (!player.pos) return
 					var circle = new Rect({
-						x: 400 - player.pos.x,
-						y: 400 - player.pos.y,
-						width: player.dead ? 10 : 5,
-						height: player.dead ? 5 : 10,
+						x: 800 - player.pos.x / this.scale,
+						y: 800 - player.pos.y / this.scale,
+						width: player.dead ? 20 : 10,
+						height: player.dead ? 10 : 20,
 						fill: player.imposter ? 'red' : 'green',
 						stroke: 'black',
 						strokeWidth: 4,
 					})
 					this.playerBoxes.push(circle)
-					this.backgroundLayer.add(circle)
+					this.playerLayer.add(circle)
 					if (!this.me.dead && this.me.imposter && !player.dead && !player.imposter && this.distance(player.pos, this.pos) < 50) this.killNearby = 'true'
 					if (!this.me.dead && player.dead && this.distance(player.pos, this.pos) < 50) this.reportNearby = 'true'
 				}).bind(this)
 			)
-			this.backgroundLayer.batchDraw()
+			this.playerLayer.draw()
 		}
-		if (data.speed) this.speed = data.speed
+		if (data.speed) {
+			this.speed = data.speed
+			this.mapPath.strokeWidth(data.speed * 2)
+		}
 		if (data.map) {
 			this.mapPath = new Path({
 				data: data.map.svg,
 				stroke: 'purple',
-				strokeWidth: 11,
+				strokeWidth: 20,
 			})
 			this.backgroundLayer.add(this.mapPath)
 			this.backgroundLayer.scale({x: this.scale, y: this.scale})
@@ -157,6 +167,7 @@ export class AppGame extends LitElement {
 			})
 			this.backgroundLayer.scale({x: this.scale, y: this.scale})
 			this.backgroundLayer.position({x: -data.map.spawn.x * this.scale + 400, y: -data.map.spawn.y * this.scale + 400})
+			this.backgroundLayer.draw()
 		}
 		this.shadowRoot.querySelector('app-minimap').onMessage(data)
 	}

@@ -48,15 +48,15 @@ export class AppMinimap extends LitElement {
 			this.mapLayer.batchDraw()
 		}
 		if (data.map) {
-			this.mapLayer.add(
-				new Path({
-					data: data.map.svg,
-					stroke: 'purple',
-					strokeWidth: 11,
-				})
-			)
+			this.path = new Path({
+				data: data.map.svg,
+				stroke: 'purple',
+				strokeWidth: 20,
+			})
+			this.mapLayer.add(this.path)
 			this.mapLayer.batchDraw()
 		}
+		if (data.speed) this.path.strokeWidth(data.speed * 2)
 	}
 }
 customElements.define('app-minimap', AppMinimap)

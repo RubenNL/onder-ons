@@ -15,7 +15,7 @@ if (!name) {
 window.sessionStorage.setItem('name', name)
 document.querySelector('#start').onclick = () => {
 	const speed = parseInt(prompt('snelheid?'))
-	if (!speed || speed < 2 || speed > 10) {
+	if (!speed || speed < 5 || speed > 20) {
 		alert('Ongeldige snelheid!')
 		return
 	}

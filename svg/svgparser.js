@@ -11,14 +11,14 @@ fs.readFile(__dirname + '/map.svg', function (err, data) {
 					svg: result.svg.path[0].$.d,
 					useLocations: [
 						{
-							x: 400,
-							y: 400,
+							x: 6673,
+							y: 3372,
 							action: 'swipe',
 						},
 					],
 					spawn: {
 						x: 5200,
-						y: 1100,
+						y: 1000,
 					},
 				},
 				null,
