@@ -44,6 +44,7 @@ module.exports = class Game {
 						.data.filter(item => item > 0).length > 0
 				)
 					player.send({chat: {from: 'GAME', message: 'in a wall!'}})
+				if (player.pos && [message.pos.x - player.pos.x, message.pos.y - player.pos.y].map(Math.abs).filter(item => item > this.speed).length > 0) player.send({chat: {from: 'GAME', message: 'too fast!'}})
 				if (!player.dead) player.pos = message.pos
 				this.sendPlayerStats()
 			}
