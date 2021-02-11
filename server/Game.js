@@ -1,7 +1,22 @@
+const Konva = require('konva-node')
 module.exports = class Game {
 	constructor(player) {
 		this.players = []
 		this.map = JSON.parse(require('fs').readFileSync('map.json'))
+		this.stage = new Konva.Stage({
+			width: 9988,
+			height: 5592,
+		})
+		this.layer = new Konva.Layer()
+		this.layer.scale({x: 0.5, y: 0.5})
+		this.stage.add(this.layer)
+		this.mapPath = new Konva.Path({
+			data: this.map.svg,
+			stroke: 'purple',
+			strokeWidth: 20,
+		})
+		this.layer.add(this.mapPath)
+		this.layer.draw()
 		this.addPlayer(player)
 	}
 	addPlayer(player) {
@@ -18,12 +33,25 @@ module.exports = class Game {
 				this.sendPlayerStats()
 			}
 			if (message.pos) {
+				const pos = {
+					x: -message.pos.x + 400,
+					y: -message.pos.y + 400,
+				}
+				if (
+					this.layer
+						.getContext('2d')
+						.getImageData(pos.x, pos.y, 1, 1)
+						.data.filter(item => item > 0).length > 0
+				)
+					player.send({chat: {from: 'GAME', message: 'in a wall!'}})
 				if (!player.dead) player.pos = message.pos
 				this.sendPlayerStats()
 			}
 			if (message.chat) this.sendAll({chat: {from: player.name, message: message.chat}})
 			if (message.start) {
 				this.speed = message.start.speed
+				this.mapPath.strokeWidth(this.speed * 2)
+				this.layer.draw()
 				this.sendAll({speed: this.speed})
 				this.restartGame()
 			}
