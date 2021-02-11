@@ -121,7 +121,8 @@ export class AppGame extends LitElement {
 	onMessage(data) {
 		if (data.you) {
 			this.me = data.you
-			this.circle.fill = this.me.imposter ? 'red' : 'green'
+			this.circle.fill(this.me.imposter ? 'red' : 'green')
+			this.circle.draw()
 		}
 		if (data.players) {
 			this.playerBoxes.forEach(box => {
@@ -163,7 +164,7 @@ export class AppGame extends LitElement {
 			this.backgroundLayer.scale({x: this.scale, y: this.scale})
 			this.useLocations = data.map.useLocations
 			this.useLocations.forEach(box => {
-				this.backgroundLayer.add(new Rect({x: box.x - 5, y: box.y - 5, fill: 'purple', stroke: 'green', height: 10, width: 10}))
+				this.backgroundLayer.add(new Rect({x: box.x - 5, y: box.y - 5, fill: 'blue', height: 50, width: 50}))
 			})
 			this.backgroundLayer.scale({x: this.scale, y: this.scale})
 			this.backgroundLayer.position({x: -data.map.spawn.x * this.scale + 400, y: -data.map.spawn.y * this.scale + 400})

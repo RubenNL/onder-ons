@@ -69,8 +69,11 @@ module.exports = class Game {
 			player.dead = false
 			player.imposter = false
 		})
-		const imposter = this.players[Math.floor(Math.random() * this.players.length)]
-		imposter.imposter = true
+		this.players[Math.floor(Math.random() * this.players.length)].imposter = true
+		this.players.forEach(player => {
+			player.send({chat: {from: 'GAME', message: 'You are ' + (player.imposter ? '' : ' NOT') + ' the imposter.'}})
+		})
+		this.sendPlayerStats()
 	}
 	sendPlayerStats() {
 		this.players.forEach(sendPlayer => {
