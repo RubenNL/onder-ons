@@ -21,7 +21,7 @@
   "dependencies": {
     "compression": "^1.7.4",
     "express": "^4.17.1",
-    "konva": "^7.2.2",
+    "konva": "^8.3.2",
     "konva-node": "^0.11.2",
     "serve-index": "^1.9.1",
     "ws": "^7.4.2"
